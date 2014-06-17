@@ -16,8 +16,14 @@ class ActiveResource::Associations::Builder::HasOneTest < ActiveSupport::TestCas
   def test_instance_build
     object = @klass.new(Product, :inventory, {})
 
-    Product.expects(:defines_has_one_finder_method).with(:inventory, Inventory)
+    Product.expects(:defines_has_one_finder_method).with(:inventory, Inventory, {})
     assert_kind_of ActiveResource::Reflection::AssociationReflection, object.build
   end
 
+  def test_instance_build_with_query
+    object = @klass.new(Product, :inventory, {query: { tag: "pencil" }})
+
+    Product.expects(:defines_has_one_finder_method).with(:inventory, Inventory, {query: { tag: "pencil" }})
+    assert_kind_of ActiveResource::Reflection::AssociationReflection, object.build
+  end
 end

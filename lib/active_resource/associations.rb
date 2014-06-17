@@ -166,7 +166,7 @@ module ActiveResource::Associations
   end
 
   # Defines the has_one association
-  def defines_has_one_finder_method(method_name, association_model)
+  def defines_has_one_finder_method(method_name, association_model, options)
     ivar_name = :"@#{method_name}"
 
     define_method(method_name) do
@@ -175,9 +175,13 @@ module ActiveResource::Associations
       elsif attributes.include?(method_name)
         attributes[method_name]
       elsif association_model.respond_to?(:singleton_name)
-        instance_variable_set(ivar_name, association_model.find(:params => {:"#{self.class.element_name}_id" => self.id}))
+        params = {:"#{self.class.element_name}_id" => self.id}
+        params.merge!(options[:query]) if options.has_key?(:query)
+        instance_variable_set(ivar_name, association_model.find(:params => params ))
       else
-        instance_variable_set(ivar_name, association_model.find(:one, :from => "/#{self.class.collection_name}/#{self.id}/#{method_name}#{self.class.format_extension}"))
+        params = {:from => "/#{self.class.collection_name}/#{self.id}/#{method_name}#{self.class.format_extension}"}
+        params.merge!({params: options[:query]}) if options.has_key?(:query)
+        instance_variable_set(ivar_name, association_model.find(:one, params))
       end
     end
   end
