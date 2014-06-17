@@ -142,7 +142,7 @@ module ActiveResource::Associations
     end
   end
 
-  def defines_has_many_finder_method(method_name, association_model, finder_key)
+  def defines_has_many_finder_method(method_name, association_model, finder_key, options)
     ivar_name = :"@#{method_name}"
 
     define_method(method_name) do
@@ -151,11 +151,14 @@ module ActiveResource::Associations
       elsif attributes.include?(method_name)
         attributes[method_name]
       elsif !new_record?
+        params = {}
         if finder_key.nil?
-          instance_variable_set(ivar_name, association_model.find(:all, :params => {:"#{self.class.element_name}_id" => self.id}))
+          params[:"#{self.class.element_name}_id"] = self.id
         else
-          instance_variable_set(ivar_name, association_model.find(:all, :params => {:"#{finder_key}" => self.id}))
+          params[:"#{finder_key}"] = self.id
         end
+        params.merge!(options[:query]) if options.has_key?(:query)
+        instance_variable_set(ivar_name, association_model.find(:all, params: params))
       else
         instance_variable_set(ivar_name, self.class.collection_parser.new)
       end
